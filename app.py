@@ -57,18 +57,23 @@ def calculate_risk(diarrhea, rainfall):
 # ===========================
 # HTML ROUTES
 # ===========================
+# ---------------------------
+# HTML ROUTES
+# ---------------------------
 @app.route("/")
 def home():
     return render_template("index.html")
 
+@app.route("/favicon.ico")
+def favicon():
+    return "", 204
+
 @app.route("/<page>")
 def pages(page):
-    """
-    Example:
-    /about   -> about.html
-    /contact -> contact.html
-    """
-    return render_template(f"{page}.html")
+    try:
+        return render_template(f"{page}.html")
+    except:
+        abort(404)
 
 # ===========================
 # API ENDPOINTS
@@ -146,3 +151,4 @@ def get_data():
 if __name__ == "__main__":
     init_database()
     app.run()
+
