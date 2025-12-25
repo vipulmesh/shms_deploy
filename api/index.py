@@ -1,9 +1,10 @@
 from flask import Flask, request, jsonify, render_template
 from datetime import datetime
+import os
 
+# Case-sensitive paths are critical for Vercel's Linux environment
 app = Flask(__name__, template_folder='../templates', static_folder='../static')
 
-# Mock database for presentation (Persistent storage requires Supabase/PostgreSQL)
 mock_db = [
     {"id": 1, "village": "Greenfield", "diarrhea": 12, "fever": 5, "rainfall": "High", "risk": "High Risk", "date": "2023-12-20"},
     {"id": 2, "village": "Riverside", "diarrhea": 3, "fever": 2, "rainfall": "Low", "risk": "Safe", "date": "2023-12-21"}
@@ -34,15 +35,19 @@ def get_data():
 def submit_data():
     try:
         data = request.get_json()
-        diarrhea = int(data.get("diarrhea"))
+        # Added 'or 0' to prevent crashes if a field is empty
+        diarrhea = int(data.get("diarrhea") or 0)
+        fever = int(data.get("fever") or 0)
         rainfall = data.get("rainfall")
+        village = data.get("village")
+        
         risk = calculate_risk(diarrhea, rainfall)
         
         new_entry = {
             "id": len(mock_db) + 1,
-            "village": data.get("village"),
+            "village": village,
             "diarrhea": diarrhea,
-            "fever": data.get("fever"),
+            "fever": fever,
             "rainfall": rainfall,
             "risk": risk,
             "date": datetime.now().strftime("%Y-%m-%d")
@@ -50,4 +55,9 @@ def submit_data():
         mock_db.insert(0, new_entry) 
         return jsonify({"success": True, "risk": risk}), 201
     except Exception as e:
+        # This will show you the exact error in the Vercel logs
+        print(f"Error: {e}")
         return jsonify({"success": False, "message": str(e)}), 500
+
+# EXTREMELY IMPORTANT FOR VERCEL:
+app = app
